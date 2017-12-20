@@ -9,6 +9,7 @@ from tkinter import *
 class Application(Frame):
     CONST_TIMEOUT_COUNT = 5
     CONST_SLEEP_TIME = 0.25
+    CONST_MOUSE_TRACK_REFRESH_sec = 0.1
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
@@ -16,27 +17,46 @@ class Application(Frame):
         self.createWidgets()
         
     def createWidgets(self):
+        self.m_mouseLabel = Label(self)
+        self.m_mouseLabelText = StringVar()
+        self.m_mouseLabelText.set("Placeholder")
+        self.m_mouseLabel["textvariable"] = self.m_mouseLabelText
+        self.m_mouseLabel.grid(row=0, column=0, columnspan=2)
+        self.startMouseTracking()
+        
         self.m_quit= Button(self)
         self.m_quit["text"] = "Quit"
         self.m_quit["fg"]   = "white"
         self.m_quit["bg"] = "red"
         self.m_quit["command"] =  self.stop
-        self.m_quit.pack({"side": "left"})
+        self.m_quit.grid(row=2, column=0)
 
         self.m_startMouse = Button(self)
         self.m_startMouse["text"] = "Start Mouse"
         self.m_startMouse["command"] = self.startClicks
-        self.m_startMouse.pack({"side": "left"})
-        
-        self.m_getMouse = Button(self)
-        self.m_getMouse["text"] = "Get Mouse Position"
-        self.m_getMouse["command"] = self.getMousePosition
-        self.m_getMouse.pack({"side": "left"})
-        
+        self.m_startMouse.grid(row=2, column=1)
+              
+    def startMouseTracking(self):
+        if not hasattr(self, 'm_clickThread'):
+            self.m_trackThread = Thread(target = self.trackMouse)
+            self.m_running = True
+            self.m_trackThread.start()
+        else:
+            print("ERROR: Mouse tracking is already running")
+            
+    def trackMouse(self):
+        while self.m_running == True:
+            location = pyautogui.position()
+            locationStr = str(location)
+            self.m_mouseLabelText.set(locationStr)
+            time.sleep(self.CONST_MOUSE_TRACK_REFRESH_sec)
+              
     def stop(self):
         self.m_running = False
         if hasattr(self, 'm_clickThread'):
             self.m_clickThread.join()
+        if hasattr(self, 'm_trackThread'):
+            self.m_trackThread.join()
         self.quit()   
         
     def startClicks(self):
@@ -60,17 +80,6 @@ class Application(Frame):
                 pyautogui.click(200, 200)
                 
                 counter = 0
-        
-    def getMousePosition(self):
-        print('Press Ctrl-C to quit.')
-        try:
-            while True:
-                x, y = pyautogui.position()
-                positionStr = 'X: ' + str(x).rjust(4) + ' Y: ' + str(y).rjust(4)
-                print(positionStr, end='')
-                print('\b' * len(positionStr), end='', flush=True)
-        except KeyboardInterrupt:
-            print('\n')
 
 
 root = Tk()
