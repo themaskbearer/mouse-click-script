@@ -1,18 +1,55 @@
-
+    
 import time
-from threading import Thread
 import pyautogui
+from threading import Thread
 from tkinter import *
 
- 
+
+
+class MouseMoveThread():
+    CONST_TIMEOUT_COUNT = 10
+    CONST_SLEEP_TIME = 0.25
+    
+    def __init__(self):
+        self.m_thread = Thread(target = self.threadLoop)
+        self.m_running = False
+    
+    def __del__(self):
+        if self.m_running == True:
+            self.stop()
+    
+    def start(self):
+        self.m_running = True
+        self.m_thread.start()
+        
+    def stop(self):
+        if self.m_running == True:
+            self.m_running = False
+            self.m_thread.join()
+        
+    def threadLoop(self):
+        counter = self.CONST_TIMEOUT_COUNT
+        while self.m_running == True:
+            
+            if counter < self.CONST_TIMEOUT_COUNT:
+                counter += self.CONST_SLEEP_TIME
+                time.sleep(self.CONST_SLEEP_TIME)
+            else:        
+                pyautogui.click(16, 156)
+                time.sleep(1)
+                pyautogui.click(163, 154)
+                
+                counter = 0
  
 class Application(Frame):
-    CONST_TIMEOUT_COUNT = 5
-    CONST_SLEEP_TIME = 0.25
+    
     CONST_MOUSE_TRACK_REFRESH_sec = 0.1
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
+        
+        self.m_clickThread = MouseMoveThread()
+        
         self.pack()
         self.createWidgets()
         
@@ -31,13 +68,13 @@ class Application(Frame):
         self.m_quit["command"] =  self.stop
         self.m_quit.grid(row=2, column=0)
 
-        self.m_startMouse = Button(self)
-        self.m_startMouse["text"] = "Start Mouse"
-        self.m_startMouse["command"] = self.startClicks
-        self.m_startMouse.grid(row=2, column=1)
+        self.m_toggleMouse = Button(self)
+        self.m_toggleMouse["text"] = "Start Mouse"
+        self.m_toggleMouse["command"] = self.startClicks
+        self.m_toggleMouse.grid(row=2, column=1)
               
     def startMouseTracking(self):
-        if not hasattr(self, 'm_clickThread'):
+        if not hasattr(self, 'm_trackThread'):
             self.m_trackThread = Thread(target = self.trackMouse)
             self.m_running = True
             self.m_trackThread.start()
@@ -54,32 +91,20 @@ class Application(Frame):
     def stop(self):
         self.m_running = False
         if hasattr(self, 'm_clickThread'):
-            self.m_clickThread.join()
+            self.m_clickThread.stop()
         if hasattr(self, 'm_trackThread'):
             self.m_trackThread.join()
+                       
         self.quit()   
         
     def startClicks(self):
-        if not hasattr(self, 'm_clickThread'):
-            self.m_clickThread = Thread(target = self.clickMouse)
-            self.m_running = True
+        if self.m_toggleMouse["text"] == "Start Mouse":
             self.m_clickThread.start()
+            self.m_toggleMouse["text"] = "Stop Mouse"
         else:
-            pyautogui.alert("Mouse is already running")
+            self.m_clickThread.stop()
+            self.m_toggleMouse["text"] = "Start Mouse"
 
-    def clickMouse(self):
-        counter = self.CONST_TIMEOUT_COUNT
-        while self.m_running == True:
-            
-            if counter < self.CONST_TIMEOUT_COUNT:
-                counter += self.CONST_SLEEP_TIME
-                time.sleep(self.CONST_SLEEP_TIME)
-            else:        
-                pyautogui.click(16, 156)
-                time.sleep(1)
-                pyautogui.click(163, 154)
-                
-                counter = 0
 
 
 root = Tk()
