@@ -8,21 +8,23 @@ from tkinter import *
 class SimpleThread():
 
     def __init__(self):
-        self.m_thread = Thread(target = self.threadLoop)
         self.m_running = False
 
     def __del__(self):
-        if self.m_running == True:
+        if hasattr(self, "m_thread"):
             self.stop()
         
     def start(self):
-        self.m_running = True
-        self.m_thread.start()
+        if not hasattr(self, "m_thread"):
+            self.m_thread = Thread(target = self.threadLoop)
+            self.m_running = True
+            self.m_thread.start()
         
     def stop(self):
         if self.m_running == True:
             self.m_running = False
             self.m_thread.join()
+            del self.m_thread
             
     def threadLoop(self):
         pass
@@ -62,6 +64,32 @@ class MouseTrackingThread(SimpleThread):
             time.sleep(self.CONST_MOUSE_TRACK_REFRESH_sec)
     
 
+class QuitButton(Button):
+    
+    def __init__(self, frame):
+        Button.__init__(self, frame)
+        
+        self["text"] = "Quit"
+        self["fg"] = "white"
+        self["bg"] = "red"
+
+
+class MouseToggleButton(Button):
+
+    def __init__(self, frame):
+        Button.__init__(self, frame)
+        
+        self["text"] = "Start Mouse"
+        
+    def click(self):
+        if self["text"] == "Start Mouse":
+            self["text"] = "Stop Mouse"
+            return True
+        else:
+            self["text"] = "Start Mouse"
+            return False
+
+    
 class Application(Frame):
     CONST_MOUSE_TRACK_REFRESH_sec = 0.1
 
@@ -78,21 +106,16 @@ class Application(Frame):
         
     def createWidgets(self):
         self.m_mouseLabel = Label(self)
-        
         self.m_mouseLabel["textvariable"] = self.m_mouseLabelText
         self.m_mouseLabel.grid(row=0, column=0, columnspan=2)
         self.m_trackThread.start()
         
-        self.m_quit= Button(self)
-        self.m_quit["text"] = "Quit"
-        self.m_quit["fg"]   = "white"
-        self.m_quit["bg"] = "red"
+        self.m_quit= QuitButton(self)
         self.m_quit["command"] =  self.stop
         self.m_quit.grid(row=2, column=0)
 
-        self.m_toggleMouse = Button(self)
-        self.m_toggleMouse["text"] = "Start Mouse"
-        self.m_toggleMouse["command"] = self.toggleClicks
+        self.m_toggleMouse = MouseToggleButton(self)
+        self.m_toggleMouse["command"] = self.toggleMouseClicks
         self.m_toggleMouse.grid(row=2, column=1)
               
     def stop(self):
@@ -101,14 +124,11 @@ class Application(Frame):
                        
         self.quit()   
         
-    def toggleClicks(self):
-        if self.m_toggleMouse["text"] == "Start Mouse":
+    def toggleMouseClicks(self):
+        if self.m_toggleMouse.click():
             self.m_clickThread.start()
-            self.m_toggleMouse["text"] = "Stop Mouse"
         else:
             self.m_clickThread.stop()
-            self.m_toggleMouse["text"] = "Start Mouse"
-
 
 
 root = Tk()
