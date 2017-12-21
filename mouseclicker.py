@@ -75,9 +75,9 @@ class Application(Frame):
                 counter += self.CONST_SLEEP_TIME
                 time.sleep(self.CONST_SLEEP_TIME)
             else:        
-                pyautogui.click(100, 200)
+                pyautogui.click(16, 156)
                 time.sleep(1)
-                pyautogui.click(200, 200)
+                pyautogui.click(163, 154)
                 
                 counter = 0
 
