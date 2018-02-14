@@ -5,7 +5,7 @@ from threading import Thread
 from tkinter import *
 
 
-class SimpleThread():
+class SimpleThread:
 
     def __init__(self):
         self._running = False
@@ -133,7 +133,12 @@ class Application(Frame):
             self._click_thread.stop()
 
 
+def on_window_close():
+    app.stop()
+
+
 root = Tk()
+root.protocol("WM_DELETE_WINDOW", on_window_close)
 app = Application(master=root)
 app.mainloop()
 root.destroy()
