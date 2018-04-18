@@ -1,4 +1,9 @@
-    
+# Install the following packages with pip to use this script:
+#   - pyautogui
+#
+# To create a standalone exe, install pyinstaller, and possibly pywin32
+
+
 import time
 import pyautogui
 from threading import Thread
@@ -14,7 +19,7 @@ class SimpleThread:
     def __del__(self):
         if hasattr(self, "m_thread"):
             self.stop()
-        
+
     def start(self):
         if not hasattr(self, "m_thread"):
             self._thread = Thread(target=self.threadloop)
